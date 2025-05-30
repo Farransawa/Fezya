@@ -1,0 +1,28 @@
+name: Generate Index Page
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  generate-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate index.html
+        run: |
+          echo "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Index of Files</title></head><body><h1>📂 File List</h1><ul>" > index.html
+          find . -type f ! -path "./.git/*" ! -path "./.github/*" ! -name "index.html" | while read file; do
+            cleanpath=$(echo "$file" | sed 's|^\./||')
+            echo "<li><a href=\"$cleanpath\">$cleanpath</a></li>" >> index.html
+          done
+          echo "</ul></body></html>" >> index.html
+
+      - name: Commit and push index.html
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add index.html
+          git commit -m "Auto-update index.html" || echo "No changes"
+          git push
